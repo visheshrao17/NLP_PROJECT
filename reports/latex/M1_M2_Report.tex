@@ -1,0 +1,180 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=blue,urlcolor=blue}
+\setlist{nosep,leftmargin=*}
+\renewcommand{\arraystretch}{1.12}
+\title{\textbf{M1--M2 Report: Package Hallucinations and Skill-Based Verification}}
+\author{Student Name: \rule{7cm}{0.4pt} \quad Course: \rule{4cm}{0.4pt}}
+\date{29 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+This report studies package hallucinations, where a code-generating large language model recommends or uses a non-existent package. Such errors create software supply-chain risk when an attacker registers a plausible missing name. M1 synthesizes the anchor study with five papers on code hallucination, agent Skills, harnesses, and tool-based correction. M2 supplies a feasible, API-based reproduction of two anchor conditions on a fixed 200-prompt Python subset. The long-term objective is an inference-time \texttt{SKILL.md} policy paired with a deterministic verification gate.
+\end{abstract}
+\section{M1: Literature Survey}
+\subsection{Research Area}
+The research area is \textbf{reliable and secure LLM-assisted software engineering}. The narrow focus is factual package/API claims in generated code: imports, installation commands, and direct package recommendations. Unlike a normal compiler error, a plausible missing dependency can become a package-confusion attack vector.
+\subsection{Selected Papers}
+\begin{enumerate}
+  \item \textbf{Anchor:} Spracklen et al., "We Have a Package for You! A Comprehensive Analysis of Package Hallucinations by Code Generating LLMs" (USENIX Security 2025)~\cite{spracklen}.
+  \item Liu et al., "Beyond Functional Correctness: Exploring Hallucinations in LLM-Generated Code" (HalluCode)~\cite{liuhallucode}.
+  \item Li et al., "SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Tasks"~\cite{skillsbench}.
+  \item Han et al., "SWE-Skills-Bench: Do Agent Skills Actually Help in Real-World Software Engineering?"~\cite{sweskills}.
+  \item Pan et al., "Natural-Language Agent Harnesses"~\cite{nlah}.
+  \item Gou et al., "CRITIC: Large Language Models Can Self-Correct with Tool-Interactive Critiquing"~\cite{critic}.
+\end{enumerate}
+
+\footnotesize
+\begin{longtable}{p{2.1cm}p{2.6cm}p{2.4cm}p{3.0cm}p{2.5cm}}
+\toprule
+\textbf{Work} & \textbf{Target / granularity} & \textbf{Mitigation} & \textbf{Key quantitative finding} & \textbf{Limitation / gap}\\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Work} & \textbf{Target / granularity} & \textbf{Mitigation} & \textbf{Key quantitative finding} & \textbf{Limitation / gap}\\
+\midrule
+\endhead
+Spracklen et al.\ (anchor) & Non-existent PyPI/npm names; package, prompt, model, language, temperature. & Static RAG, LLM self-detection, fine-tuning. & 576,000 samples, 16 models; 19.7\% hallucinated recommendations overall; at least 5.2\% commercial and 21.7\% open-source. & No isolated deterministic gate; self-detection asks the generator to judge its own claim.\\
+\addlinespace
+Liu et al.\ / HalluCode & Requirement, context, and knowledge conflict; fine-grained code snippets. & Prompt enhancement, self-refine, CoT, RAG. & 1,134/3,120 samples (36.35\%) contain hallucination; pass@1: 6.26 with vs.\ 54.73 without hallucination. & Broad taxonomy; no registry-based package verifier.\\
+\addlinespace
+SkillsBench & Procedural knowledge in agents; 86 tasks, 11 domains, 7,308 trajectories. & Curated vs.\ none vs.\ self-generated Skills. & Curated Skills: +16.2 percentage points (pp); self-generated: -1.3pp. & Does not distinguish prose benefit from executable factual verification.\\
+\addlinespace
+SWE-Skills-Bench & Public Skills on repository tasks; paired requirement-level deltas. & Inject public Skills into agents. & 3,920 paired evaluations; 92/98 Skills insignificant; pass ratio 76.6\% to 76.9\%. & Prose Skills can anchor agents to templates.\\
+\addlinespace
+NLAH & Harness logic; run-level policies and modules. & Natural-language harness with runtime contracts/gates. & Comparable outcomes to code/prompt harnesses, with inspectable shorter policy. & No package-validity task or comparison with registry evidence.\\
+\addlinespace
+CRITIC & Factual errors, flawed programs, toxicity; revision trajectory. & Tool-interactive verify--critique--revise. & TabMWP gains for LLaMA-2: +4.7\% (7B) to +16.0\% (70B). & Tool use is model-mediated; no package false-positive metric.\\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsection{Initial Research Problem and Anchor Justification}
+\textbf{Research question:} Holding prompts, model, temperature, and repair budget fixed, does an executable \texttt{SKILL.md} plus deterministic package registry gate reduce invalid dependency references more than vanilla generation, static RAG, LLM self-detection, or prose-only instructions?
+
+The anchor paper is appropriate because it defines the exact security-relevant failure, includes code and prompt artifacts, tests model/temperature factors, and has RAG and self-detection baselines. HalluCode shows functional correctness does not cover factual code errors. CRITIC motivates external feedback. SkillsBench, SWE-Skills-Bench, and NLAH motivate treating a harness as a measurable, ablatable component rather than unexamined controller logic.
+
+\section{M1: Reproducibility Checklist}
+\small
+\begin{tabularx}{\linewidth}{p{6.1cm}cX}
+\toprule
+\textbf{Checklist item} & \textbf{Status} & \textbf{Evidence / implication}\\
+\midrule
+Public dataset available? & Yes & \texttt{Data/Python/} and \texttt{Data/Javascript/} include \texttt{SO\_AT}, \texttt{SO\_LY}, \texttt{LLM\_AT}, and \texttt{LLM\_LY}.\\
+Dataset size documented? & Yes & Full study: 576,000 generated samples over 16 models.\\
+Public code available? & Yes & \url{https://github.com/Spracks/PackageHallucination}.\\
+Public pretrained model available? & Partial & Repository expects checkpoints under \texttt{Models/}; not all evaluated checkpoints/serving setups are packaged.\\
+Hardware requirement known? & Partial & Local code uses CUDA through Hugging Face; exact GPU/memory configuration is not fully specified.\\
+Training time known? & Partial & Main study is inference, not training. README gives 24--72 hours for a full run.\\
+Dependencies listed? & Yes & \texttt{environment.yml} and \texttt{requirements.txt} are supplied.\\
+Evaluation metric clear? & Yes & Hallucination rate is invalid package references divided by total recommended references.\\
+Feasible on Colab/Kaggle/free GPU? & Partial & Full replication is costly; a 200-prompt API or quantized small-model subset is feasible.\\
+Reported results sufficiently reproducible? & Partial & Data/code are public, but detailed outputs, model/quantization versions, hardware, and registry timing constrain exact recreation.\\
+\bottomrule
+\end{tabularx}
+\normalsize
+
+\paragraph{Data and preprocessing.}
+M2 uses 100 prompts from \texttt{Data/Python/SO\_LY.json} and 100 from \texttt{Data/Python/LLM\_LY.json}, sampled without replacement using seed \texttt{20261028}. Validity is assessed using the repository's \texttt{pypi\_package\_names.csv}, its false-positive exceptions, and \texttt{sys.stdlib\_module\_names}. Names are lowercased and normalized by replacing runs of \texttt{-}, \texttt{\_}, and \texttt{.} with \texttt{-}.
+
+\paragraph{Anchor detection channels.}
+(1) Regular-expression extraction from explicit \texttt{pip install}/\texttt{npm install} commands; (2) an LLM query asking which dependencies are required by generated code; (3) an LLM query asking which packages are useful for the original problem. The M2 code retains these ideas and adds AST import extraction with a regex fallback.
+
+\section{M2: Feasible Baseline Reproduction}
+\subsection{Code and Experimental Setup}
+The submitted file \texttt{reproduce\_m2\_baseline.py} is a standalone, drop-in runner for a cloned anchor repository. It uses only the Python standard library plus an OpenAI-compatible endpoint; it can target OpenRouter, Groq, Gemini-compatible endpoints, or a locally hosted vLLM server.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{4.3cm}p{8.4cm}}
+\toprule
+\textbf{Item} & \textbf{Specification}\\
+\midrule
+Conditions & Two model sizes (small: 7B/8B; large: 70B+), $T\in\{0.0,0.7\}$, and C0/C2.\\
+C0 & Vanilla code generation followed by extraction and deterministic registry scoring.\\
+C2 & Anchor self-detection: ask \texttt{Is [package] a valid Python package?}; reject flagged names and regenerate at most two times.\\
+Model decoding & 2,048 maximum generated tokens; package elicitation and binary self-detection run at temperature 0.\\
+Preprocessing & Code-fence removal; AST imports; pip-command regex; recommendation parsing; de-duplication and normalization.\\
+Training setup & None. This is an inference-time baseline.\\
+Saved artifacts & Prompt-level CSV, summary CSV, Markdown table, LaTex table, and \texttt{run\_config.json}.\\
+\bottomrule
+\end{tabular}
+\caption{M2 reproduction setup. Exact provider/model identifiers are saved by the runner.}
+\label{tab:m2setup}
+\end{table}
+
+\subsection{Metrics}
+For output $i$, let $C_i$ denote deduplicated package claims and $H_i \subseteq C_i$ the claims missing from the PyPI snapshot, standard library set, and exception list:
+\[
+\text{Hallucination Rate} = 100\frac{\sum_i |H_i|}{\sum_i |C_i|}.
+\]
+The script also reports prompt-level hallucination incidence, false-positive refusal rate for C2 (valid claims that the LLM rejects), and mean regeneration count.
+
+\subsection{Original Result, Reproduced Result, and Gap}
+\small
+\begin{tabularx}{\linewidth}{p{3.0cm}p{4.1cm}X}
+\toprule
+\textbf{Item} & \textbf{Result} & \textbf{Interpretation}\\
+\midrule
+Original result & 19.7\% hallucinated recommendations overall; at least 5.2\% commercial and 21.7\% open-source. & Full anchor-study result; not an expected exact value for M2.\\
+Reproduced data/preprocessing & Completed: fixed 200-prompt sample validated; 500,503 PyPI names loaded from the repository snapshot. & Confirms sample construction, registry loading, and repository integration.\\
+Reproduced model result & Pending live endpoint execution. & No API key/model endpoint was supplied. A result must be generated with the provided code, not invented.\\
+Reproduction gap & To be measured after run. & Compare only descriptively because M2 changes prompt size, model/provider, decoding implementation, and compute budget.\\
+\bottomrule
+\end{tabularx}
+\normalsize
+
+\paragraph{Gap analysis.}
+If M2 differs from the anchor, analyze rather than hide: random seed and subset, prompt source, API model/version drift, temperature/decoding, AST versus upstream extraction, registry age, import-name to distribution-name mismatch, regeneration implementation, and compute limits. The runner saves all configuration and prompt-level results required for this analysis.
+
+\paragraph{Run commands.}
+\begin{verbatim}
+export OPENAI_API_KEY='YOUR_KEY'
+python reproduce_m2_baseline.py \
+  --repo-root /absolute/path/PackageHallucination \
+  --base-url https://openrouter.ai/api/v1 \
+  --models small=provider/model-8b large=provider/model-70b
+\end{verbatim}
+Validate the data path without API usage:
+\begin{verbatim}
+python reproduce_m2_baseline.py \
+  --repo-root /absolute/path/PackageHallucination --dry-run
+\end{verbatim}
+After execution, include the automatically generated result table with:
+\begin{verbatim}
+\input{Tests/M2_API_Reproduction/summary.tex}
+\end{verbatim}
+
+\section{M3/M4 Preview: Verify-Skill Harness}
+\textbf{Hypothesis:} a focused \texttt{SKILL.md} plus an executable AST/registry gate (C4) will reduce package hallucination rate relative to C0 (vanilla), C1 (static RAG), C2 (self-detection), and C3 (prose-only \texttt{SKILL.md}) at equal conditions. It should also reduce C2's false-positive refusals because validity is determined by external evidence rather than model self-belief.
+
+\begin{center}
+\fbox{\parbox{0.88\linewidth}{\centering
+\textbf{Generate} $\rightarrow$ \textbf{Extract imports/install/recommendations} $\rightarrow$ \textbf{Normalize} $\rightarrow$ \textbf{Verify versioned registry} $\rightarrow$ \textbf{Pass or repair} $\rightarrow$ \textbf{Abstain after budget}}}
+\end{center}
+
+The ablation plan removes prose while retaining the gate, removes the gate while retaining prose, varies repair budget, varies registry freshness, compares AST/regex/union extraction, and removes import aliases. Primary outcome: reference-level hallucination rate. Secondary outcomes: prompt incidence, valid-package recall, false-positive refusal rate, task utility, latency, and cost.
+
+\section{Conclusion}
+M1 identifies a defensible research gap: package self-detection is not deterministic external verification. The anchor is sufficiently public for a constrained but transparent reproduction. M2 supplies runnable code and clearly separates completed preprocessing replication from pending live-model results. M3/M4 will determine whether the executable verification gate, rather than prose alone, causes any reduction in hallucinations.
+
+\begin{thebibliography}{9}
+\bibitem{spracklen} J. Spracklen et al. "We Have a Package for You! A Comprehensive Analysis of Package Hallucinations by Code Generating LLMs." \textit{USENIX Security}, 2025. \url{https://www.usenix.org/system/files/usenixsecurity25-spracklen.pdf}
+\bibitem{liuhallucode} F. Liu et al. "Beyond Functional Correctness: Exploring Hallucinations in LLM-Generated Code." arXiv:2404.00971. \url{https://arxiv.org/abs/2404.00971}
+\bibitem{skillsbench} X. Li et al. "SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Tasks." arXiv:2602.12670, 2026. \url{https://arxiv.org/abs/2602.12670}
+\bibitem{sweskills} T. Han et al. "SWE-Skills-Bench: Do Agent Skills Actually Help in Real-World Software Engineering?" arXiv:2603.15401, 2026. \url{https://arxiv.org/abs/2603.15401}
+\bibitem{nlah} L. Pan et al. "Natural-Language Agent Harnesses." arXiv:2603.25723, 2026. \url{https://arxiv.org/abs/2603.25723}
+\bibitem{critic} Z. Gou et al. "CRITIC: Large Language Models Can Self-Correct with Tool-Interactive Critiquing." \textit{ICLR}, 2024. \url{https://arxiv.org/abs/2305.11738}
+\end{thebibliography}
+\end{document}

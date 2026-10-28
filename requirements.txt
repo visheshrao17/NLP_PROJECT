@@ -1,0 +1,12 @@
+# Core (stdlib-only for reproduce_m2_baseline.py, but listed for clarity)
+# No external dependencies required for M2 baseline script
+
+# --- M3/M4 dependencies (install when needed) ---
+# requests>=2.31.0          # HTTP client for live PyPI lookups
+# packaging>=23.0           # PEP 503 name normalization
+# pandas>=2.1.0             # Data analysis and CSV handling
+# matplotlib>=3.8.0         # Plotting results
+# seaborn>=0.13.0           # Statistical visualizations
+# scipy>=1.11.0             # Statistical tests (McNemar, permutation)
+# jupyter>=1.0.0            # Notebook support
+# pytest>=7.4.0             # Testing

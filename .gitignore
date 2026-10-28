@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data files (large / sensitive — download via script)
+data/raw/
+data/registry_snapshots/*.csv
+!data/raw/.gitkeep
+!data/registry_snapshots/.gitkeep
+
+# Results (regenerable from experiments)
+results/tables/
+results/figures/
+results/logs/
+!results/tables/.gitkeep
+!results/figures/.gitkeep
+!results/logs/.gitkeep
+
+# API keys and secrets
+.env
+*.key
+run_config.json
+
+# LaTeX build artifacts
+reports/latex/*.aux
+reports/latex/*.log
+reports/latex/*.out
+reports/latex/*.bbl
+reports/latex/*.blg
+reports/latex/*.fdb_latexmk
+reports/latex/*.fls
+reports/latex/*.synctex.gz
+reports/latex/*.toc

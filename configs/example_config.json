@@ -1,0 +1,35 @@
+{
+  "_comment": "Template experiment configuration — copy and fill before each run",
+  "experiment_id": "",
+  "milestone": "M2",
+  "date": "",
+  "seed": 20261028,
+  "sample_size": {
+    "SO_LY": 100,
+    "LLM_LY": 100
+  },
+  "models": {
+    "small": {
+      "provider_alias": "",
+      "label": "small"
+    },
+    "large": {
+      "provider_alias": "",
+      "label": "large"
+    }
+  },
+  "temperatures": [0.0, 0.7],
+  "conditions": ["C0", "C2"],
+  "api": {
+    "base_url": "",
+    "provider": "",
+    "rate_limit_rpm": null
+  },
+  "registry": {
+    "pypi_snapshot": "data/registry_snapshots/pypi_package_names.csv",
+    "stdlib_source": "sys.stdlib_module_names",
+    "false_positives": "data/registry_snapshots/false_positive_packages.csv"
+  },
+  "regeneration_budget": 2,
+  "output_dir": "results/"
+}
