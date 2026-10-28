@@ -22,10 +22,10 @@ hallucinated across 16 models and 576,000 generations.
 
 | Milestone | Description | Status |
 |-----------|-------------|--------|
-| **M1** | Literature survey and reproducibility audit | ✅ Done |
-| **M2** | API-based baseline reproduction (C0, C2) | 🔄 In Progress |
-| **M3** | Verify-Skill agent harness (C3, C4) | ⬜ Planned |
-| **M4** | Ablation study and final analysis | ⬜ Planned |
+| **M1** | Literature survey and reproducibility audit |  Done |
+| **M2** | API-based baseline reproduction (C0, C2) | Done |
+| **M3** | Verify-Skill agent harness (C3, C4) | Planned |
+| **M4** | Ablation study and final analysis | Planned |
 
 ## Project Structure
 
